@@ -1,100 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:smart_home_mobile/core/theme/app_color.dart';
 import 'package:smart_home_mobile/features/home/widget/animated_background.dart';
-import 'package:smart_home_mobile/features/home/widget/carousel_card.dart';
-import 'package:smart_home_mobile/features/home/widget/device_title.dart';
 
-class HomePage extends StatefulWidget {
+import '../widget/header_section.dart';
+import '../widget/energy_summary_card.dart';
+import '../widget/active_devices_card.dart';
+import '../widget/usage_chart_card.dart';
+
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  bool smartLight = true;
-  bool solarPanel = false;
-  bool doorLocks = false;
-  bool tv = false;
-  int selectedIndex = 0;
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: AnimatedBackground(
-        child: SafeArea(
-          child: Stack(
+    return AnimatedBackground(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+
+          padding: EdgeInsets.only(
+            top: 10.h,
+            bottom: 120.h, // aman dari navbar
+          ),
+
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// SCROLLABLE CONTENT
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.only(bottom: 120.h), // space for navbar
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 20.h),
+              /// HEADER
+              const HeaderSection(),
 
-                      Center(
-                        child: Text(
-                          "My Home",
-                          style: TextStyle(
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.title,
-                          ),
-                        ),
-                      ),
+              SizedBox(height: 24.h),
 
-                      SizedBox(height: 30.h),
+              /// SUMMARY
+              const EnergySummaryCard(),
 
-                      const ControllerCard(),
+              SizedBox(height: 24.h),
 
-                      SizedBox(height: 25.h),
+              /// ACTIVE DEVICES
+              const ActiveDevicesCard(),
 
-                      Text(
-                        "Devices",
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.title,
-                        ),
-                      ),
+              SizedBox(height: 24.h),
 
-                      SizedBox(height: 15.h),
+              /// USAGE CHART
+              const UsageChartCard(),
 
-                      DeviceTile(
-                        title: "Smart lights",
-                        subtitle: "Living room · 4 devices",
-                        value: smartLight,
-                        onChanged: (val) => setState(() => smartLight = val),
-                      ),
-
-                      DeviceTile(
-                        title: "Solar panel",
-                        subtitle: "Capacity · 78%",
-                        value: solarPanel,
-                        onChanged: (val) => setState(() => solarPanel = val),
-                      ),
-
-                      DeviceTile(
-                        title: "Door locks",
-                        subtitle: "Capacity · 3 devices",
-                        value: doorLocks,
-                        onChanged: (val) => setState(() => doorLocks = val),
-                      ),
-
-                      DeviceTile(
-                        title: "Television",
-                        subtitle: "Capacity · 4 devices",
-                        value: tv,
-                        onChanged: (val) => setState(() => tv = val),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              SizedBox(height: 10.h),
             ],
           ),
         ),
