@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_home_mobile/features/home/widget/animated_background.dart';
+import 'package:smart_home_mobile/services/mqtt_service.dart';
 
 import '../widget/header_section.dart';
 import '../widget/energy_summary_card.dart';
@@ -8,7 +9,10 @@ import '../widget/active_devices_card.dart';
 import '../widget/usage_chart_card.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final MqttService mqttService;
+  final bool mqttConnectionStatus;
+
+  const HomePage({super.key, required this.mqttService, required this.mqttConnectionStatus});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +31,7 @@ class HomePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               /// HEADER
-              const HeaderSection(),
+              HeaderSection(mqttService: mqttService, mqttConnectionStatus: mqttConnectionStatus),
 
               SizedBox(height: 24.h),
 

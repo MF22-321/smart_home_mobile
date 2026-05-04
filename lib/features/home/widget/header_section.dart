@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:smart_home_mobile/services/mqtt_service.dart';
 
 class HeaderSection extends StatelessWidget {
-  const HeaderSection({super.key});
+  final MqttService mqttService;
+  final bool mqttConnectionStatus;
+
+  const HeaderSection({super.key, required this.mqttService, required this.mqttConnectionStatus});
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +15,13 @@ class HeaderSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(Icons.menu, size: 28.sp),
+            IconButton(
+              icon: Icon(Icons.menu, size: 28.sp),
+              onPressed: () {
+                // Open drawer or menu
+                Scaffold.of(context).openDrawer();
+              },
+            ),
             Text(
               "FlexySave",
               style: TextStyle(
@@ -74,13 +84,18 @@ class HeaderSection extends StatelessWidget {
                   Container(
                     width: 10.w,
                     height: 10.w,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
+                    decoration: BoxDecoration(
+                      color: mqttConnectionStatus ? Colors.green : Colors.red,
                       shape: BoxShape.circle,
                     ),
                   ),
                   SizedBox(width: 8.w),
-                  Text("LIVE"),
+                  Text(
+                    "LIVE",
+                    style: TextStyle(
+                      color: mqttConnectionStatus ? Colors.green : Colors.red,
+                    ),
+                  ),
                 ],
               ),
             ),
