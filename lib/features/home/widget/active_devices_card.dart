@@ -1,135 +1,177 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:smart_home_mobile/services/device_service.dart';
+import 'package:smart_home_mobile/services/mqtt_service.dart';
 
 class ActiveDevicesCard extends StatelessWidget {
-  const ActiveDevicesCard({super.key});
+  final DeviceDataService deviceService;
+  final MqttService mqttService;
+
+  const ActiveDevicesCard({
+    super.key,
+    required this.deviceService,
+    required this.mqttService,
+  });
+
+  /// 🔥 DEVICE CONFIG
+  static const Map<String, Map<String, dynamic>> deviceConfig = {
+    "flexy-001": {
+      "title": "Lamp",
+      "room": "Living Room",
+      "icon": Icons.light_outlined,
+      "iconBg": Color(0xffEEF9F0),
+      "iconColor": Color(0xff22C55E),
+    },
+    "flexy-002": {
+      "title": "Lamp",
+      "room": "Bedroom",
+      "icon": Icons.light_outlined,
+      "iconBg": Color(0xffEEF4FF),
+      "iconColor": Color(0xff3B82F6),
+    },
+    "flexy-003": {
+      "title": "Lamp",
+      "room": "Kitchen",
+      "icon": Icons.light_outlined,
+      "iconBg": Color(0xffEEF4FF),
+      "iconColor": Color(0xff3B82F6),
+    },
+  };
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(18.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          /// HEADER
-          Row(
-            children: [
-              Container(
-                width: 42.w,
-                height: 42.w,
-                decoration: BoxDecoration(
-                  color: const Color(0xffEEF4FF),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.power_outlined,
-                  size: 22.sp,
-                  color: const Color(0xff3B82F6),
-                ),
-              ),
+    return AnimatedBuilder(
+      animation: deviceService,
+      builder: (context, _) {
+        /// 🔥 FILTER DEVICE VALID
+        final devices = deviceService.getAllDevices().where((d) {
+          return deviceConfig.containsKey(d.deviceId);
+        }).toList();
 
-              SizedBox(width: 12.w),
+        int onlineCount = 0;
 
-              Expanded(
-                child: Text(
-                  "Active Devices",
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xff111827),
-                  ),
-                ),
-              ),
+        final items = devices.map((d) {
+          final config = deviceConfig[d.deviceId]!;
 
-              Text(
-                "3 Online",
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xff22C55E),
-                ),
-              ),
+          final device = deviceService.getDevice(d.deviceId);
 
-              SizedBox(width: 4.w),
+          /// 🔥 REALTIME STATUS
+          final isOn = device?.status['state'] == "ON";
 
-              Icon(
-                Icons.chevron_right,
-                size: 18.sp,
-                color: const Color(0xff22C55E),
+          if (isOn) onlineCount++;
+
+          return _deviceItem(
+            deviceId: d.deviceId,
+            icon: config['icon'],
+            iconBg: config['iconBg'],
+            iconColor: config['iconColor'],
+            title: config['title'],
+            room: config['room'],
+            isOn: isOn,
+          );
+        }).toList();
+
+        return Container(
+          padding: EdgeInsets.all(18.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
+          child: Column(
+            children: [
+              /// ================= HEADER =================
+              Row(
+                children: [
+                  Container(
+                    width: 42.w,
+                    height: 42.w,
+                    decoration: const BoxDecoration(
+                      color: Color(0xffEEF4FF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.power_outlined,
+                      size: 22.sp,
+                      color: const Color(0xff3B82F6),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
 
-          SizedBox(height: 18.h),
+                  Expanded(
+                    child: Text(
+                      "Active Devices",
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xff111827),
+                      ),
+                    ),
+                  ),
 
-          /// ITEMS
-          _deviceItem(
-            icon: Icons.light_outlined,
-            iconBg: const Color(0xffEEF9F0),
-            iconColor: const Color(0xff22C55E),
-            title: "Lamp",
-            room: "Living Room",
-            isOn: true,
-          ),
+                  /// 🔥 ONLINE COUNT REALTIME
+                  Text(
+                    "$onlineCount Online",
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xff22C55E),
+                    ),
+                  ),
 
-          _deviceItem(
-            icon: Icons.outlet_outlined,
-            iconBg: const Color(0xffEEF4FF),
-            iconColor: const Color(0xff3B82F6),
-            title: "Socket",
-            room: "Study Room",
-            isOn: true,
-          ),
+                  SizedBox(width: 4.w),
 
-          _deviceItem(
-            icon: Icons.toys_outlined,
-            iconBg: const Color(0xffEEF4FF),
-            iconColor: const Color(0xff3B82F6),
-            title: "Fan",
-            room: "Bedroom",
-            isOn: false,
-          ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18.sp,
+                    color: const Color(0xff22C55E),
+                  ),
+                ],
+              ),
 
-          SizedBox(height: 10.h),
+              SizedBox(height: 18.h),
 
-          /// FOOTER
-          Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "View all devices",
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
+              /// ================= DEVICE LIST =================
+              ...items,
+
+              SizedBox(height: 10.h),
+
+              /// ================= FOOTER =================
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "View all devices",
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xff2563EB),
+                    ),
+                  ),
+                  SizedBox(width: 4.w),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18.sp,
                     color: const Color(0xff2563EB),
                   ),
-                ),
-                SizedBox(width: 4.w),
-                Icon(
-                  Icons.chevron_right,
-                  size: 18.sp,
-                  color: const Color(0xff2563EB),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
+  /// ================= DEVICE ITEM =================
   Widget _deviceItem({
+    required String deviceId,
     required IconData icon,
     required Color iconBg,
     required Color iconColor,
@@ -170,7 +212,6 @@ class ActiveDevicesCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xff111827),
                   ),
                 ),
                 SizedBox(height: 4.h),
@@ -214,12 +255,26 @@ class ActiveDevicesCard extends StatelessWidget {
 
           SizedBox(width: 14.w),
 
-          /// SWITCH
+          /// 🔥 SWITCH CONTROL (OPTIMISTIC + MQTT)
           Transform.scale(
             scale: 0.9,
             child: Switch(
               value: isOn,
-              onChanged: (_) {},
+              onChanged: (value) {
+                final command = value ? "ON" : "OFF";
+
+                /// 🔥 UPDATE UI LANGSUNG (OPTIMISTIC)
+                final device = deviceService.getDevice(deviceId);
+                if (device != null) {
+                  device.status['state'] = command;
+                  deviceService.notifyListeners();
+                }
+
+                /// 🔥 KIRIM KE MQTT
+                mqttService.sendControl(deviceId, "LED", command);
+
+                debugPrint("SEND -> $deviceId : $command");
+              },
               activeColor: Colors.white,
               activeTrackColor: const Color(0xff22C55E),
               inactiveThumbColor: Colors.white,

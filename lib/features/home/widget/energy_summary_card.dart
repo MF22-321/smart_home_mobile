@@ -1,147 +1,245 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:smart_home_mobile/services/device_service.dart';
 
 class EnergySummaryCard extends StatelessWidget {
-  const EnergySummaryCard({super.key});
+  final DeviceDataService deviceService;
+
+  /// 🔥 Mapping nama device
+  final Map<String, String> deviceNames = {
+    "flexy-001": "Living Room",
+    "flexy-002": "Bedroom",
+  };
+
+  EnergySummaryCard({super.key, required this.deviceService});
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isSmall = constraints.maxWidth < 340;
+    return StreamBuilder<Map<String, dynamic>>(
+      stream: deviceService.environmentStream,
+      builder: (context, snapshot) {
+        /// 🔥 LANGSUNG AMBIL DEVICE (NO DELAY UI)
+        final devices = deviceService.getAllDevices();
 
-        return Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(20.w),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28.r),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xff22C55E), Color(0xff0EA5E9)],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.withOpacity(0.12),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
+        /// 🔥 FILTER: hanya yang ada power (PZEM)
+        final validDevices = devices.where((d) {
+          final env = deviceService.getEnv(d.deviceId);
+          return env.containsKey('power');
+        }).toList();
 
-          child: isSmall ? _mobileLayout() : _desktopLayout(),
+        if (validDevices.isEmpty) {
+          return _emptyState();
+        }
+
+        return Column(
+          children: validDevices.map((d) {
+            final env = deviceService.getEnv(d.deviceId);
+
+            final energy = (env['energy'] ?? 0).toDouble();
+            final power = (env['power'] ?? 0).toDouble();
+            final cost = (env['cost'] ?? 0).toDouble();
+
+            final name = deviceNames[d.deviceId] ?? d.deviceId;
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: 16.h),
+              child: _buildCard(name, energy, power, cost),
+            );
+          }).toList(),
         );
       },
     );
   }
 
-  /// NORMAL WIDTH
-  Widget _desktopLayout() {
-    return Row(
-      children: [
-        Expanded(child: _leftSection()),
+  /// ================= CARD =================
+  Widget _buildCard(String title, double energy, double power, double cost) {
+    final config = _getRoomConfig(title);
 
-        Container(width: 1.w, height: 120.h, color: Colors.white24),
-
-        SizedBox(width: 18.w),
-
-        Expanded(child: _rightSection()),
-      ],
-    );
-  }
-
-  /// SMALL PHONE
-  Widget _mobileLayout() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _leftSection(),
-
-        SizedBox(height: 18.h),
-
-        Container(height: 1.h, width: double.infinity, color: Colors.white24),
-
-        SizedBox(height: 18.h),
-
-        _rightSection(),
-      ],
-    );
-  }
-
-  Widget _leftSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Total Electricity Usage",
-          style: TextStyle(
-            fontSize: 13.sp,
-            color: Colors.white70,
-            fontWeight: FontWeight.w500,
-          ),
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(18.w),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26.r),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: config['gradient'],
         ),
+        boxShadow: [
+          BoxShadow(
+            color: config['gradient'][0].withOpacity(0.25),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
 
-        SizedBox(height: 14.h),
-
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              "18.6",
-              style: TextStyle(
-                fontSize: 40.sp,
-                height: 1,
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// ================= HEADER =================
+          Row(
+            children: [
+              Container(
+                width: 46.w,
+                height: 46.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.2),
+                ),
+                child: Icon(config['icon'], color: Colors.white, size: 24.sp),
               ),
-            ),
 
-            SizedBox(width: 6.w),
+              SizedBox(width: 12.w),
 
-            Padding(
-              padding: EdgeInsets.only(bottom: 5.h),
-              child: Text(
-                "kWh",
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Row(
+                      children: [
+                        Container(
+                          width: 6.w,
+                          height: 6.w,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          "Live",
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
-        ),
-      ],
+
+              /// 🔥 POWER REALTIME
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Text(
+                  "${power.toStringAsFixed(0)} W",
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 18.h),
+
+          /// ================= DATA =================
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              /// ENERGY
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    energy.toStringAsFixed(3),
+                    style: TextStyle(
+                      fontSize: 34.sp,
+                      height: 1,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    "kWh Usage",
+                    style: TextStyle(fontSize: 13.sp, color: Colors.white70),
+                  ),
+                ],
+              ),
+
+              /// COST (AKUMULATIF 🔥)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    "Rp ${cost.toStringAsFixed(0)}",
+                    style: TextStyle(
+                      fontSize: 28.sp,
+                      height: 1,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    "Accumulated Cost",
+                    style: TextStyle(fontSize: 13.sp, color: Colors.white70),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _rightSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Estimated Bill",
-          style: TextStyle(
-            fontSize: 13.sp,
-            color: Colors.white70,
-            fontWeight: FontWeight.w500,
+  /// ================= EMPTY STATE =================
+  Widget _emptyState() {
+    return Container(
+      padding: EdgeInsets.all(24.w),
+      alignment: Alignment.center,
+      child: Column(
+        children: [
+          Icon(Icons.bolt_outlined, size: 40.sp, color: Colors.grey),
+          SizedBox(height: 10.h),
+          Text(
+            "Waiting for energy data...",
+            style: TextStyle(fontSize: 14.sp, color: Colors.grey),
           ),
-        ),
-
-        SizedBox(height: 14.h),
-
-        Text(
-          "₹1,248",
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 32.sp,
-            height: 1,
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  /// ================= ROOM CONFIG =================
+  Map<String, dynamic> _getRoomConfig(String title) {
+    switch (title) {
+      case "Living Room":
+        return {
+          "icon": Icons.chair_outlined,
+          "gradient": [Color(0xff22C55E), Color(0xff3B82F6)],
+        };
+
+      case "Bedroom":
+        return {
+          "icon": Icons.bed_outlined,
+          "gradient": [Color(0xff6366F1), Color(0xff8B5CF6)],
+        };
+
+      default:
+        return {
+          "icon": Icons.devices,
+          "gradient": [Color(0xff0EA5E9), Color(0xff22C55E)],
+        };
+    }
   }
 }

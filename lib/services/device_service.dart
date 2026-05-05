@@ -2,9 +2,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'mqtt_service.dart';
 
-/// ===============================
-/// MODEL DEVICE
-/// ===============================
 class DeviceData {
   final String deviceId;
 
@@ -12,12 +9,14 @@ class DeviceData {
   Map<String, dynamic> status = {};
   Map<String, dynamic> realtime = {};
 
+  /// 🔥 AKUMULASI BIAYA
+  double totalCost = 0;
+
+  DateTime? lastUpdate;
+
   DeviceData({required this.deviceId});
 }
 
-/// ===============================
-/// DEVICE SERVICE (FINAL)
-/// ===============================
 class DeviceDataService extends ChangeNotifier {
   final MqttService mqtt;
 
@@ -25,33 +24,23 @@ class DeviceDataService extends ChangeNotifier {
     _init();
   }
 
-  /// ===============================
-  /// STORAGE
-  /// ===============================
   final Map<String, DeviceData> _devices = {};
   Map<String, DeviceData> get devices => _devices;
 
-  /// 🔥 ENV PER DEVICE (ANTI TABRAKAN)
   final Map<String, Map<String, dynamic>> _envPerDevice = {};
 
-  /// ===============================
-  /// STREAM (REALTIME UI)
-  /// ===============================
   final _envController = StreamController<Map<String, dynamic>>.broadcast();
   Stream<Map<String, dynamic>> get environmentStream => _envController.stream;
 
-  /// ===============================
-  /// INIT MQTT LISTENER
-  /// ===============================
+  /// 🔥 TARIF
+  static const double tarif = 1444;
+
   void _init() {
     mqtt.onParsedMessage = (topic, data) {
       _handleMessage(topic, data);
     };
   }
 
-  /// ===============================
-  /// HANDLE MQTT MESSAGE
-  /// ===============================
   void _handleMessage(String topic, Map<String, dynamic> json) {
     try {
       final deviceId = json['device_id'];
@@ -59,39 +48,29 @@ class DeviceDataService extends ChangeNotifier {
 
       bool updated = false;
 
-      /// ===============================
-      /// INIT DEVICE
-      /// ===============================
       _devices.putIfAbsent(deviceId, () => DeviceData(deviceId: deviceId));
-
       final device = _devices[deviceId]!;
 
-      /// INIT ENV DEVICE
       _envPerDevice.putIfAbsent(deviceId, () => {});
       final env = _envPerDevice[deviceId]!;
 
-      /// ===============================
-      /// SENSOR DATA
-      /// ===============================
+      /// ================= SENSOR =================
       if (topic.contains('sensor')) {
         if (json.containsKey('data')) {
           final data = json['data'];
 
           device.sensors.addAll(data);
 
-          /// 🌡️ TEMPERATURE
           if (data.containsKey('tempC')) {
             env['temperature'] = data['tempC'];
             updated = true;
           }
 
-          /// 💧 HUMIDITY
           if (data.containsKey('humidity')) {
             env['humidity'] = data['humidity'];
             updated = true;
           }
 
-          /// 🚶 PIR
           if (data.containsKey('motion')) {
             env['motion'] = data['motion'] == 1;
             updated = true;
@@ -99,51 +78,70 @@ class DeviceDataService extends ChangeNotifier {
         }
       }
 
-      /// ===============================
-      /// LDR (OPTIONAL DEVICE)
-      /// ===============================
+      /// ================= LDR =================
       if (topic.contains('ldr')) {
         if (json.containsKey('data')) {
           final data = json['data'];
-
           if (data.containsKey('state')) {
-            env['light'] = data['state']; // DARK / BRIGHT
+            env['light'] = data['state'];
             updated = true;
           }
         }
       }
 
-      /// ===============================
-      /// FAN STATUS 🔥 (FLEXY-004)
-      /// ===============================
+      /// ================= FAN =================
       if (topic.contains('fan')) {
         if (json.containsKey('status')) {
-          env['fan'] = json['status']; // ON / OFF
+          env['fan'] = json['status'];
           updated = true;
         }
       }
 
-      /// ===============================
-      /// DEVICE STATUS (GENERAL)
-      /// ===============================
-      if (topic.contains('status')) {
+      /// ================= LED STATUS =================
+      if (topic.contains('status/led')) {
         if (json.containsKey('status')) {
           device.status['state'] = json['status'];
         }
       }
 
-      /// ===============================
-      /// REALTIME (PZEM dll)
-      /// ===============================
-      if (topic.contains('realtime')) {
+      /// ================= 🔥 REALTIME PZEM =================
+      /// ================= 🔥 REALTIME PZEM =================
+      if (topic.contains('realtime/pzem')) {
         if (json.containsKey('data')) {
-          device.realtime.addAll(json['data']);
+          final data = json['data'];
+
+          /// 🔥 AMBIL DATA DARI SENSOR
+          final power = (data['power'] ?? 0).toDouble();
+          final energy = (data['energy'] ?? 0).toDouble();
+
+          /// 🔥 TARIF LISTRIK
+          const double tarif = 1444;
+
+          /// ===============================
+          /// 🔥 SAVE RAW DATA
+          /// ===============================
+          device.realtime.addAll(data);
+
+          /// ===============================
+          /// 🔥 MAP KE ENV (UNTUK UI)
+          /// ===============================
+          env['power'] = power;
+          env['voltage'] = (data['voltage'] ?? 0).toDouble();
+          env['current'] = (data['current'] ?? 0).toDouble();
+
+          /// 🔥 ENERGY (LANGSUNG DARI PZEM)
+          env['energy'] = energy;
+
+          /// 🔥 COST (AKURAT & STABIL)
+          env['cost'] = energy * tarif;
+
+          /// ===============================
+          /// 🔥 STREAM KE UI
+          /// ===============================
+          _envController.add({'device_id': deviceId, 'data': Map.from(env)});
         }
       }
 
-      /// ===============================
-      /// EMIT KE UI
-      /// ===============================
       if (updated) {
         _envController.add({'device_id': deviceId, 'data': Map.from(env)});
       }
@@ -154,26 +152,14 @@ class DeviceDataService extends ChangeNotifier {
     }
   }
 
-  /// ===============================
-  /// GET DEVICE
-  /// ===============================
   DeviceData? getDevice(String id) => _devices[id];
 
-  /// ===============================
-  /// GET ALL DEVICES
-  /// ===============================
   List<DeviceData> getAllDevices() => _devices.values.toList();
 
-  /// ===============================
-  /// GET ENV BY DEVICE (OPTIONAL)
-  /// ===============================
   Map<String, dynamic> getEnv(String deviceId) {
     return _envPerDevice[deviceId] ?? {};
   }
 
-  /// ===============================
-  /// DISPOSE
-  /// ===============================
   void disposeService() {
     _envController.close();
   }

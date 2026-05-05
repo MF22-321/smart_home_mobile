@@ -67,9 +67,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       HomePage(
         mqttService: _mqttService,
         mqttConnectionStatus: _isMqttConnected,
+        deviceService: _deviceService, // 🔥 TAMBAH INI
       ),
       DevicePage(mqttService: _mqttService, deviceService: _deviceService),
-      const AnalyticsPage(),
+      AnalyticsPage(),
       AutomationPage(mqttService: _mqttService),
       EnvironmentPage(deviceService: _deviceService),
     ];
