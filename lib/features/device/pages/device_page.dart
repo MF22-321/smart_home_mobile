@@ -21,25 +21,71 @@ class DevicePage extends StatefulWidget {
 class _DevicePageState extends State<DevicePage> {
   int selectedCategory = 0;
 
-  /// 🔥 REAL DEVICE MAP
+  /// =====================================================
+  /// 🔥 DEVICE LIST
+  /// =====================================================
   final List<Map<String, dynamic>> deviceList = [
     {
-      "name": "Living Room",
+      "title": "Living Room Lamp",
       "device_id": "flexy-001",
+      "target": "LED",
+      "statusKey": "led",
       "room": "living",
-      "icon": Icons.weekend,
+      "icon": Icons.lightbulb,
+      "color": Color(0xffFACC15),
     },
+
     {
-      "name": "Bedroom",
+      "title": "Bedroom Lamp",
       "device_id": "flexy-002",
+      "target": "LED",
+      "statusKey": "led",
       "room": "bedroom",
-      "icon": Icons.bed,
+      "icon": Icons.lightbulb,
+      "color": Color(0xff60A5FA),
     },
+
     {
-      "name": "Kitchen",
+      "title": "Kitchen Lamp",
       "device_id": "flexy-003",
+      "target": "LED",
+      "statusKey": "led",
       "room": "kitchen",
-      "icon": Icons.kitchen,
+      "icon": Icons.lightbulb,
+      "color": Color(0xff34D399),
+    },
+
+    /// 🔥 FLEXY-004 LED
+    {
+      "title": "Outdoor Front Lamp",
+      "device_id": "flexy-004",
+      "target": "LED",
+      "statusKey": "led",
+      "room": "outdoor",
+      "icon": Icons.lightbulb,
+      "color": Color(0xffF59E0B),
+    },
+
+    /// 🔥 FLEXY-004 FAN
+    {
+      "title": "Outdoor Cooling Fan",
+      "device_id": "flexy-004",
+      "target": "FAN",
+      "statusKey": "fan",
+      "room": "outdoor",
+      "icon": Icons.mode_fan_off_outlined,
+      "color": Color(0xff3B82F6),
+    },
+
+    /// 🔥 FLEXY-005
+    {
+      "title": "Outdoor Backyard Lamp",
+      "device_id": "flexy-005",
+      "target": "LED",
+      "statusKey": "led",
+      "room": "outdoor",
+      "icon": Icons.lightbulb,
+      "color": Color(0xff22C55E),
     },
   ];
 
@@ -52,12 +98,18 @@ class _DevicePageState extends State<DevicePage> {
           child: Column(
             children: [
               SizedBox(height: 10.h),
+
               _header(),
-              SizedBox(height: 20.h),
-              _category(),
+
               SizedBox(height: 20.h),
 
-              /// 🔥 REALTIME DEVICE LIST
+              _category(),
+
+              SizedBox(height: 20.h),
+
+              /// =====================================================
+              /// DEVICE LIST
+              /// =====================================================
               Expanded(
                 child: AnimatedBuilder(
                   animation: widget.deviceService,
@@ -66,9 +118,19 @@ class _DevicePageState extends State<DevicePage> {
 
                     final filtered = deviceList.where((d) {
                       if (selectedCategory == 0) return true;
-                      if (selectedCategory == 1) return d['room'] == "living";
-                      if (selectedCategory == 2) return d['room'] == "bedroom";
-                      if (selectedCategory == 3) return d['room'] == "kitchen";
+                      if (selectedCategory == 1) {
+                        return d['room'] == "living";
+                      }
+                      if (selectedCategory == 2) {
+                        return d['room'] == "bedroom";
+                      }
+                      if (selectedCategory == 3) {
+                        return d['room'] == "kitchen";
+                      }
+                      if (selectedCategory == 4) {
+                        return d['room'] == "outdoor";
+                      }
+
                       return true;
                     }).toList();
 
@@ -76,19 +138,25 @@ class _DevicePageState extends State<DevicePage> {
                       itemCount: filtered.length,
                       itemBuilder: (context, index) {
                         final item = filtered[index];
+
                         final deviceId = item['device_id'];
+                        final statusKey = item['statusKey'];
 
                         final device = devices[deviceId];
 
-                        final isOn = device?.status['state'] == "ON";
+                        final isOn = device?.status[statusKey] == "ON";
+
                         final motion = device?.sensors['motion'] == 1;
 
                         return _deviceCard(
-                          title: item['name'],
+                          title: item['title'],
                           icon: item['icon'],
+                          color: item['color'],
                           isOn: isOn,
                           motion: motion,
                           deviceId: deviceId,
+                          target: item['target'],
+                          statusKey: statusKey,
                         );
                       },
                     );
@@ -102,30 +170,40 @@ class _DevicePageState extends State<DevicePage> {
     );
   }
 
-  /// ================= HEADER =================
+  /// =====================================================
+  /// HEADER
+  /// =====================================================
   Widget _header() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _topIcon(Icons.menu),
+
         Text(
           "FlexySave",
           style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.w800),
         ),
+
         _topIcon(Icons.notifications_none),
       ],
     );
   }
 
-  /// ================= CATEGORY =================
+  /// =====================================================
+  /// CATEGORY
+  /// =====================================================
   Widget _category() {
-    return Row(
-      children: [
-        _chip("All", 0),
-        _chip("Living", 1),
-        _chip("Bedroom", 2),
-        _chip("Kitchen", 3),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _chip("All", 0),
+          _chip("Living", 1),
+          _chip("Bedroom", 2),
+          _chip("Kitchen", 3),
+          _chip("Outdoor", 4),
+        ],
+      ),
     );
   }
 
@@ -133,37 +211,61 @@ class _DevicePageState extends State<DevicePage> {
     final selected = selectedCategory == index;
 
     return GestureDetector(
-      onTap: () => setState(() => selectedCategory = index),
-      child: Container(
+      onTap: () {
+        setState(() {
+          selectedCategory = index;
+        });
+      },
+
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
         margin: EdgeInsets.only(right: 10.w),
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+
         decoration: BoxDecoration(
           color: selected ? const Color(0xffF0FDF4) : Colors.white,
+
           borderRadius: BorderRadius.circular(14.r),
         ),
+
         child: Text(
           text,
-          style: TextStyle(color: selected ? Colors.green : Colors.black),
+          style: TextStyle(
+            color: selected ? Colors.green : Colors.black,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
   }
 
-  /// ================= DEVICE CARD =================
+  /// =====================================================
+  /// DEVICE CARD
+  /// =====================================================
   Widget _deviceCard({
     required String title,
     required IconData icon,
+    required Color color,
     required bool isOn,
     required bool motion,
     required String deviceId,
+    required String target,
+    required String statusKey,
   }) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
       height: 120.h,
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
+
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24.r),
+
+        border: Border.all(
+          color: isOn ? color.withOpacity(0.25) : Colors.transparent,
+        ),
+
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -173,40 +275,47 @@ class _DevicePageState extends State<DevicePage> {
         ],
       ),
 
-      /// 🔥 langsung Row (lebih clean)
       child: Row(
         children: [
-          /// 🔥 ICON LAMPU ANIMATED
+          /// =====================================================
+          /// ICON
+          /// =====================================================
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             width: 64.w,
             height: 64.w,
+
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isOn ? const Color(0xffFEF9C3) : const Color(0xffF3F4F6),
+
+              color: isOn ? color.withOpacity(0.18) : const Color(0xffF3F4F6),
+
               boxShadow: isOn
                   ? [
                       BoxShadow(
-                        color: Colors.yellow.withOpacity(0.6),
+                        color: color.withOpacity(0.4),
                         blurRadius: 20,
-                        spreadRadius: 3,
+                        spreadRadius: 2,
                       ),
                     ]
                   : [],
             ),
+
             child: Icon(
-              Icons.lightbulb,
+              icon,
               size: 34.sp,
-              color: isOn ? const Color(0xffFACC15) : const Color(0xff9CA3AF),
+              color: isOn ? color : const Color(0xff9CA3AF),
             ),
           ),
 
           SizedBox(width: 18.w),
 
-          /// 🔥 TEXT INFO
+          /// =====================================================
+          /// INFO
+          /// =====================================================
           Expanded(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // 🔥 tengah vertikal
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -219,22 +328,27 @@ class _DevicePageState extends State<DevicePage> {
 
                 SizedBox(height: 6.h),
 
-                /// PIR STATUS
                 Row(
                   children: [
                     Container(
                       width: 8.w,
                       height: 8.w,
+
                       decoration: BoxDecoration(
                         color: motion ? Colors.red : Colors.grey,
+
                         shape: BoxShape.circle,
                       ),
                     ),
+
                     SizedBox(width: 8.w),
+
                     Text(
                       motion ? "Motion Detected" : "No Motion",
+
                       style: TextStyle(
                         color: motion ? Colors.red : Colors.grey,
+
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w600,
                       ),
@@ -245,20 +359,34 @@ class _DevicePageState extends State<DevicePage> {
             ),
           ),
 
-          /// 🔥 SWITCH (lebih rapi)
+          /// =====================================================
+          /// SWITCH
+          /// =====================================================
           Transform.scale(
             scale: 1.1,
+
             child: Switch(
               value: isOn,
+
               onChanged: (val) {
-                widget.mqttService.sendControl(
-                  deviceId,
-                  "LED",
-                  val ? "ON" : "OFF",
-                );
+                final command = val ? "ON" : "OFF";
+
+                /// 🔥 SEND MQTT
+                widget.mqttService.sendControl(deviceId, target, command);
+
+                /// 🔥 OPTIMISTIC UI
+                final device = widget.deviceService.getDevice(deviceId);
+
+                if (device != null) {
+                  device.status[statusKey] = command;
+                }
+
+                widget.deviceService.notifyListeners();
               },
+
               activeColor: Colors.white,
               activeTrackColor: const Color(0xff22C55E),
+
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: const Color(0xffD1D5DB),
             ),
@@ -272,10 +400,12 @@ class _DevicePageState extends State<DevicePage> {
     return Container(
       width: 50.w,
       height: 50.w,
+
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
       ),
+
       child: Icon(icon),
     );
   }

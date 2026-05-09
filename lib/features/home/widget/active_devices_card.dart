@@ -13,63 +13,119 @@ class ActiveDevicesCard extends StatelessWidget {
     required this.mqttService,
   });
 
-  /// 🔥 DEVICE CONFIG
-  static const Map<String, Map<String, dynamic>> deviceConfig = {
-    "flexy-001": {
-      "title": "Lamp",
-      "room": "Living Room",
-      "icon": Icons.light_outlined,
-      "iconBg": Color(0xffEEF9F0),
-      "iconColor": Color(0xff22C55E),
-    },
-    "flexy-002": {
-      "title": "Lamp",
-      "room": "Bedroom",
-      "icon": Icons.light_outlined,
-      "iconBg": Color(0xffEEF4FF),
-      "iconColor": Color(0xff3B82F6),
-    },
-    "flexy-003": {
-      "title": "Lamp",
-      "room": "Kitchen",
-      "icon": Icons.light_outlined,
-      "iconBg": Color(0xffEEF4FF),
-      "iconColor": Color(0xff3B82F6),
-    },
+  /// =====================================================
+  /// 🔥 DEVICE CONFIG (MULTI DEVICE PER ESP32)
+  /// =====================================================
+  static const Map<String, List<Map<String, dynamic>>> deviceConfig = {
+    "flexy-001": [
+      {
+        "target": "LED",
+        "statusKey": "led",
+        "title": "Lamp",
+        "room": "Living Room",
+        "icon": Icons.light_outlined,
+        "iconBg": Color(0xffEEF9F0),
+        "iconColor": Color(0xff22C55E),
+      },
+    ],
+
+    "flexy-002": [
+      {
+        "target": "LED",
+        "statusKey": "led",
+        "title": "Lamp",
+        "room": "Bedroom",
+        "icon": Icons.light_outlined,
+        "iconBg": Color(0xffEEF4FF),
+        "iconColor": Color(0xff3B82F6),
+      },
+    ],
+
+    "flexy-003": [
+      {
+        "target": "LED",
+        "statusKey": "led",
+        "title": "Lamp",
+        "room": "Kitchen",
+        "icon": Icons.light_outlined,
+        "iconBg": Color(0xffEEF4FF),
+        "iconColor": Color(0xff3B82F6),
+      },
+    ],
+
+    /// 🔥 FLEXy-004
+    "flexy-004": [
+      {
+        "target": "LED",
+        "statusKey": "led",
+        "title": "Lamp",
+        "room": "Outdoor Front",
+        "icon": Icons.light_outlined,
+        "iconBg": Color(0xffFEF3C7),
+        "iconColor": Color(0xffF59E0B),
+      },
+
+      {
+        "target": "FAN",
+        "statusKey": "fan",
+        "title": "Cooling Fan",
+        "room": "Outdoor Front",
+        "icon": Icons.mode_fan_off_outlined,
+        "iconBg": Color(0xffDBEAFE),
+        "iconColor": Color(0xff2563EB),
+      },
+    ],
+
+    /// 🔥 FLEXy-005
+    "flexy-005": [
+      {
+        "target": "LED",
+        "statusKey": "led",
+        "title": "Lamp",
+        "room": "Outdoor Backyard",
+        "icon": Icons.light_outlined,
+        "iconBg": Color(0xffDCFCE7),
+        "iconColor": Color(0xff16A34A),
+      },
+    ],
   };
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: deviceService,
-      builder: (context, _) {
-        /// 🔥 FILTER DEVICE VALID
-        final devices = deviceService.getAllDevices().where((d) {
-          return deviceConfig.containsKey(d.deviceId);
-        }).toList();
-
+    return StreamBuilder<Map<String, dynamic>>(
+      stream: deviceService.environmentStream,
+      builder: (context, snapshot) {
         int onlineCount = 0;
 
-        final items = devices.map((d) {
-          final config = deviceConfig[d.deviceId]!;
+        final List<Widget> items = [];
 
-          final device = deviceService.getDevice(d.deviceId);
+        /// =====================================================
+        /// 🔥 GENERATE ALL DEVICES
+        /// =====================================================
+        deviceConfig.forEach((deviceId, configs) {
+          final device = deviceService.getDevice(deviceId);
 
-          /// 🔥 REALTIME STATUS
-          final isOn = device?.status['state'] == "ON";
+          for (final config in configs) {
+            final statusKey = config['statusKey'];
 
-          if (isOn) onlineCount++;
+            final isOn = device?.status[statusKey] == "ON";
 
-          return _deviceItem(
-            deviceId: d.deviceId,
-            icon: config['icon'],
-            iconBg: config['iconBg'],
-            iconColor: config['iconColor'],
-            title: config['title'],
-            room: config['room'],
-            isOn: isOn,
-          );
-        }).toList();
+            if (isOn) onlineCount++;
+
+            items.add(
+              _deviceItem(
+                deviceId: deviceId,
+                target: config['target'],
+                icon: config['icon'],
+                iconBg: config['iconBg'],
+                iconColor: config['iconColor'],
+                title: config['title'],
+                room: config['room'],
+                isOn: isOn,
+              ),
+            );
+          }
+        });
 
         return Container(
           padding: EdgeInsets.all(18.w),
@@ -84,9 +140,12 @@ class ActiveDevicesCard extends StatelessWidget {
               ),
             ],
           ),
+
           child: Column(
             children: [
-              /// ================= HEADER =================
+              /// =====================================================
+              /// HEADER
+              /// =====================================================
               Row(
                 children: [
                   Container(
@@ -102,6 +161,7 @@ class ActiveDevicesCard extends StatelessWidget {
                       color: const Color(0xff3B82F6),
                     ),
                   ),
+
                   SizedBox(width: 12.w),
 
                   Expanded(
@@ -115,7 +175,6 @@ class ActiveDevicesCard extends StatelessWidget {
                     ),
                   ),
 
-                  /// 🔥 ONLINE COUNT REALTIME
                   Text(
                     "$onlineCount Online",
                     style: TextStyle(
@@ -124,44 +183,15 @@ class ActiveDevicesCard extends StatelessWidget {
                       color: const Color(0xff22C55E),
                     ),
                   ),
-
-                  SizedBox(width: 4.w),
-
-                  Icon(
-                    Icons.chevron_right,
-                    size: 18.sp,
-                    color: const Color(0xff22C55E),
-                  ),
                 ],
               ),
 
               SizedBox(height: 18.h),
 
-              /// ================= DEVICE LIST =================
+              /// =====================================================
+              /// DEVICE LIST
+              /// =====================================================
               ...items,
-
-              SizedBox(height: 10.h),
-
-              /// ================= FOOTER =================
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "View all devices",
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff2563EB),
-                    ),
-                  ),
-                  SizedBox(width: 4.w),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 18.sp,
-                    color: const Color(0xff2563EB),
-                  ),
-                ],
-              ),
             ],
           ),
         );
@@ -169,9 +199,12 @@ class ActiveDevicesCard extends StatelessWidget {
     );
   }
 
-  /// ================= DEVICE ITEM =================
+  /// =====================================================
+  /// 🔥 DEVICE ITEM
+  /// =====================================================
   Widget _deviceItem({
     required String deviceId,
+    required String target,
     required IconData icon,
     required Color iconBg,
     required Color iconColor,
@@ -179,30 +212,43 @@ class ActiveDevicesCard extends StatelessWidget {
     required String room,
     required bool isOn,
   }) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: const Color(0xffF1F3F5)),
+        border: Border.all(
+          color: isOn
+              ? const Color(0xff22C55E).withOpacity(0.25)
+              : const Color(0xffF1F3F5),
+        ),
       ),
+
       child: Row(
         children: [
+          /// =====================================================
           /// ICON
-          Container(
+          /// =====================================================
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
             width: 46.w,
             height: 46.w,
             decoration: BoxDecoration(
               color: iconBg,
               borderRadius: BorderRadius.circular(14.r),
             ),
+
             child: Icon(icon, size: 24.sp, color: iconColor),
           ),
 
           SizedBox(width: 14.w),
 
-          /// NAME
+          /// =====================================================
+          /// TITLE
+          /// =====================================================
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,9 +258,12 @@ class ActiveDevicesCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
+                    color: const Color(0xff111827),
                   ),
                 ),
+
                 SizedBox(height: 4.h),
+
                 Text(
                   room,
                   style: TextStyle(
@@ -226,25 +275,30 @@ class ActiveDevicesCard extends StatelessWidget {
             ),
           ),
 
+          /// =====================================================
           /// STATUS
+          /// =====================================================
           Row(
             children: [
-              Container(
-                width: 7.w,
-                height: 7.w,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: 8.w,
+                height: 8.w,
                 decoration: BoxDecoration(
+                  shape: BoxShape.circle,
                   color: isOn
                       ? const Color(0xff22C55E)
                       : const Color(0xffD1D5DB),
-                  shape: BoxShape.circle,
                 ),
               ),
+
               SizedBox(width: 8.w),
+
               Text(
                 isOn ? "ON" : "OFF",
                 style: TextStyle(
                   fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: isOn
                       ? const Color(0xff22C55E)
                       : const Color(0xff9CA3AF),
@@ -255,26 +309,38 @@ class ActiveDevicesCard extends StatelessWidget {
 
           SizedBox(width: 14.w),
 
-          /// 🔥 SWITCH CONTROL (OPTIMISTIC + MQTT)
+          /// =====================================================
+          /// SWITCH
+          /// =====================================================
           Transform.scale(
             scale: 0.9,
             child: Switch(
               value: isOn,
+
               onChanged: (value) {
                 final command = value ? "ON" : "OFF";
 
-                /// 🔥 UPDATE UI LANGSUNG (OPTIMISTIC)
+                /// 🔥 SEND MQTT
+                mqttService.sendControl(deviceId, target, command);
+
+                /// 🔥 OPTIMISTIC UI
                 final device = deviceService.getDevice(deviceId);
+
                 if (device != null) {
-                  device.status['state'] = command;
+                  if (target == "LED") {
+                    device.status['led'] = command;
+                  }
+
+                  if (target == "FAN") {
+                    device.status['fan'] = command;
+                  }
+
                   deviceService.notifyListeners();
                 }
 
-                /// 🔥 KIRIM KE MQTT
-                mqttService.sendControl(deviceId, "LED", command);
-
-                debugPrint("SEND -> $deviceId : $command");
+                debugPrint("SEND -> $deviceId | $target | $command");
               },
+
               activeColor: Colors.white,
               activeTrackColor: const Color(0xff22C55E),
               inactiveThumbColor: Colors.white,
