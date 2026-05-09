@@ -70,8 +70,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         deviceService: _deviceService, // 🔥 TAMBAH INI
       ),
       DevicePage(mqttService: _mqttService, deviceService: _deviceService),
-      AnalyticsPage(),
-      AutomationPage(mqttService: _mqttService),
+      AnalyticsPage(deviceId: 'flexy-001'),
+
+      AutomationPage(mqttService: _mqttService, deviceService: _deviceService),
       EnvironmentPage(deviceService: _deviceService),
     ];
 

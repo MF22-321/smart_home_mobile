@@ -363,32 +363,46 @@ class _DevicePageState extends State<DevicePage> {
           /// SWITCH
           /// =====================================================
           Transform.scale(
-            scale: 1.1,
+            scale: 1.0,
 
-            child: Switch(
-              value: isOn,
+            child: Opacity(
+              /// 🔥 AUTO MODE VISUAL
+              opacity: widget.deviceService.isAutomationMode ? 0.55 : 1,
 
-              onChanged: (val) {
-                final command = val ? "ON" : "OFF";
+              child: IgnorePointer(
+                /// 🔥 LOCK SWITCH
+                ignoring: widget.deviceService.isAutomationMode,
 
-                /// 🔥 SEND MQTT
-                widget.mqttService.sendControl(deviceId, target, command);
+                child: Switch(
+                  value: isOn,
 
-                /// 🔥 OPTIMISTIC UI
-                final device = widget.deviceService.getDevice(deviceId);
+                  onChanged: (val) {
+                    final command = val ? "ON" : "OFF";
 
-                if (device != null) {
-                  device.status[statusKey] = command;
-                }
+                    /// 🔥 SEND MQTT
+                    widget.mqttService.sendControl(deviceId, target, command);
 
-                widget.deviceService.notifyListeners();
-              },
+                    /// 🔥 OPTIMISTIC UI
+                    final device = widget.deviceService.getDevice(deviceId);
 
-              activeColor: Colors.white,
-              activeTrackColor: const Color(0xff22C55E),
+                    if (device != null) {
+                      device.status[statusKey] = command;
+                    }
 
-              inactiveThumbColor: Colors.white,
-              inactiveTrackColor: const Color(0xffD1D5DB),
+                    widget.deviceService.notifyListeners();
+
+                    debugPrint("SEND -> $deviceId | $target | $command");
+                  },
+
+                  activeColor: Colors.white,
+
+                  activeTrackColor: const Color(0xff22C55E),
+
+                  inactiveThumbColor: Colors.white,
+
+                  inactiveTrackColor: const Color(0xffD1D5DB),
+                ),
+              ),
             ),
           ),
         ],

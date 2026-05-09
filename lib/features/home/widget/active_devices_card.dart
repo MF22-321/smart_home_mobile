@@ -317,33 +317,44 @@ class ActiveDevicesCard extends StatelessWidget {
             child: Switch(
               value: isOn,
 
-              onChanged: (value) {
-                final command = value ? "ON" : "OFF";
+              /// =====================================================
+              /// 🔥 AUTO MODE LOCK
+              /// =====================================================
+              onChanged: deviceService.isAutomationMode
+                  ? null
+                  : (value) {
+                      final command = value ? "ON" : "OFF";
 
-                /// 🔥 SEND MQTT
-                mqttService.sendControl(deviceId, target, command);
+                      /// 🔥 SEND MQTT
+                      mqttService.sendControl(deviceId, target, command);
 
-                /// 🔥 OPTIMISTIC UI
-                final device = deviceService.getDevice(deviceId);
+                      /// 🔥 OPTIMISTIC UI
+                      final device = deviceService.getDevice(deviceId);
 
-                if (device != null) {
-                  if (target == "LED") {
-                    device.status['led'] = command;
-                  }
+                      if (device != null) {
+                        if (target == "LED") {
+                          device.status['led'] = command;
+                        }
 
-                  if (target == "FAN") {
-                    device.status['fan'] = command;
-                  }
+                        if (target == "FAN") {
+                          device.status['fan'] = command;
+                        }
 
-                  deviceService.notifyListeners();
-                }
+                        deviceService.notifyListeners();
+                      }
 
-                debugPrint("SEND -> $deviceId | $target | $command");
-              },
+                      debugPrint("SEND -> $deviceId | $target | $command");
+                    },
 
+              /// =====================================================
+              /// COLORS
+              /// =====================================================
               activeColor: Colors.white,
+
               activeTrackColor: const Color(0xff22C55E),
+
               inactiveThumbColor: Colors.white,
+
               inactiveTrackColor: const Color(0xffC7CDD8),
             ),
           ),

@@ -62,6 +62,8 @@ class DeviceDataService extends ChangeNotifier {
   /// =====================================================
   static const double tarif = 1444;
 
+  bool isAutomationMode = true;
+
   /// =====================================================
   /// INIT MQTT
   /// =====================================================
@@ -162,6 +164,20 @@ class DeviceDataService extends ChangeNotifier {
 
           /// 🔥 REALTIME UI
           _envController.add({'device_id': deviceId, 'data': Map.from(env)});
+
+          notifyListeners();
+        }
+      }
+
+      /// =====================================================
+      /// SYSTEM STATUS
+      /// =====================================================
+      if (topic.contains('status/system')) {
+        if (json.containsKey('status')) {
+          final mode = json['status'];
+
+          /// 🔥 AUTO / MANUAL
+          isAutomationMode = mode == "AUTO";
 
           notifyListeners();
         }
