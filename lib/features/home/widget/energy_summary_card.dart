@@ -7,8 +7,8 @@ class EnergySummaryCard extends StatelessWidget {
 
   /// 🔥 Mapping nama device
   final Map<String, String> deviceNames = {
-    "flexy-001": "Living Room",
-    "flexy-002": "Bedroom",
+    "flexy-001": "Room 1",
+    "flexy-002": "Room 2",
   };
 
   EnergySummaryCard({super.key, required this.deviceService});
@@ -223,13 +223,13 @@ class EnergySummaryCard extends StatelessWidget {
   /// ================= ROOM CONFIG =================
   Map<String, dynamic> _getRoomConfig(String title) {
     switch (title) {
-      case "Living Room":
+      case "Room 1":
         return {
           "icon": Icons.chair_outlined,
           "gradient": [Color(0xff22C55E), Color(0xff3B82F6)],
         };
 
-      case "Bedroom":
+      case "Room 2":
         return {
           "icon": Icons.bed_outlined,
           "gradient": [Color(0xff6366F1), Color(0xff8B5CF6)],

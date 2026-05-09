@@ -120,18 +120,28 @@ class _DevicePageState extends State<DevicePage> {
                     final devices = widget.deviceService.devices;
 
                     final filtered = deviceList.where((d) {
-                      if (selectedCategory == 0) return true;
+                      if (selectedCategory == 0) {
+                        return true;
+                      }
+
                       if (selectedCategory == 1) {
-                        return d['room'] == "living";
+                        return d['room'] == "01";
                       }
+
                       if (selectedCategory == 2) {
-                        return d['room'] == "bedroom";
+                        return d['room'] == "02";
                       }
+
                       if (selectedCategory == 3) {
-                        return d['room'] == "kitchen";
+                        return d['room'] == "03";
                       }
+
                       if (selectedCategory == 4) {
-                        return d['room'] == "outdoor";
+                        return d['room'] == "04";
+                      }
+
+                      if (selectedCategory == 5) {
+                        return d['room'] == "05";
                       }
 
                       return true;
@@ -201,10 +211,11 @@ class _DevicePageState extends State<DevicePage> {
       child: Row(
         children: [
           _chip("All", 0),
-          _chip("Living", 1),
-          _chip("Bedroom", 2),
-          _chip("Kitchen", 3),
-          _chip("Outdoor", 4),
+          _chip("Room 1", 1),
+          _chip("Room 2", 2),
+          _chip("Room 3", 3),
+          _chip("Room 4", 4),
+          _chip("Room 5", 5),
         ],
       ),
     );

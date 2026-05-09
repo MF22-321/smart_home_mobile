@@ -59,9 +59,9 @@ class HomePage extends StatelessWidget {
               SizedBox(height: 24.h),
 
               /// USAGE CHART
-              const UsageChartCard(),
+              // const UsageChartCard(),
 
-              SizedBox(height: 10.h),
+              // SizedBox(height: 10.h),
             ],
           ),
         ),
