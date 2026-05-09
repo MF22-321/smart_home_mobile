@@ -22,6 +22,11 @@ class AutomationPage extends StatefulWidget {
 class _AutomationPageState extends State<AutomationPage> {
   int selectedTab = 0;
 
+  /// =====================================================
+  /// 🔥 LOCAL UI STATE
+  /// =====================================================
+  bool isAutomatic = true;
+
   final List<String> deviceIds = [
     "flexy-001",
     "flexy-002",
@@ -83,8 +88,9 @@ class _AutomationPageState extends State<AutomationPage> {
   void initState() {
     super.initState();
 
-    /// 🔥 LOCAL SCHEDULER
-    /// sementara masih Flutter side
+    /// 🔥 SYNC INITIAL STATE
+    isAutomatic = widget.deviceService.isAutomationMode;
+
     _startScheduler();
   }
 
@@ -113,8 +119,6 @@ class _AutomationPageState extends State<AutomationPage> {
   void _startScheduler() {
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       final now = TimeOfDay.now();
-
-      final isAutomatic = widget.deviceService.isAutomationMode;
 
       /// 🔥 ONLY RUN IN AUTO MODE
       if (!isAutomatic) return;
@@ -172,9 +176,6 @@ class _AutomationPageState extends State<AutomationPage> {
   @override
   Widget build(BuildContext context) {
     final currentId = deviceTabs[selectedTab]['id'];
-
-    /// 🔥 REALTIME SYSTEM MODE
-    final isAutomatic = widget.deviceService.isAutomationMode;
 
     return AnimatedBackground(
       child: SafeArea(
@@ -246,6 +247,17 @@ class _AutomationPageState extends State<AutomationPage> {
                           selected: isAutomatic,
 
                           onTap: () {
+                            /// 🔥 UI STATE
+                            setState(() {
+                              isAutomatic = true;
+                            });
+
+                            /// 🔥 GLOBAL STATE
+                            widget.deviceService.isAutomationMode = true;
+
+                            widget.deviceService.notifyListeners();
+
+                            /// 🔥 SEND MQTT
                             _setMode(true);
                           },
                         ),
@@ -262,6 +274,17 @@ class _AutomationPageState extends State<AutomationPage> {
                           selected: !isAutomatic,
 
                           onTap: () {
+                            /// 🔥 UI STATE
+                            setState(() {
+                              isAutomatic = false;
+                            });
+
+                            /// 🔥 GLOBAL STATE
+                            widget.deviceService.isAutomationMode = false;
+
+                            widget.deviceService.notifyListeners();
+
+                            /// 🔥 SEND MQTT
                             _setMode(false);
                           },
                         ),
@@ -533,7 +556,11 @@ class _AutomationPageState extends State<AutomationPage> {
             SizedBox(width: 14.w),
 
             Expanded(
-              child: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                title,
+
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
 
             Text(

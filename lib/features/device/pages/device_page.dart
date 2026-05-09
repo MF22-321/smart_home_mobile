@@ -24,66 +24,69 @@ class _DevicePageState extends State<DevicePage> {
   /// =====================================================
   /// 🔥 DEVICE LIST
   /// =====================================================
+  /// =====================================================
+  /// 🔥 DEVICE LIST
+  /// =====================================================
   final List<Map<String, dynamic>> deviceList = [
     {
-      "title": "Living Room Lamp",
+      "title": "Room 1 Lamp",
       "device_id": "flexy-001",
       "target": "LED",
       "statusKey": "led",
-      "room": "living",
+      "room": "01",
       "icon": Icons.lightbulb,
       "color": Color(0xffFACC15),
     },
 
     {
-      "title": "Bedroom Lamp",
+      "title": "Room 2 Lamp",
       "device_id": "flexy-002",
       "target": "LED",
       "statusKey": "led",
-      "room": "bedroom",
+      "room": "02",
       "icon": Icons.lightbulb,
       "color": Color(0xff60A5FA),
     },
 
     {
-      "title": "Kitchen Lamp",
+      "title": "Room 3 Lamp",
       "device_id": "flexy-003",
       "target": "LED",
       "statusKey": "led",
-      "room": "kitchen",
+      "room": "03",
       "icon": Icons.lightbulb,
       "color": Color(0xff34D399),
     },
 
     /// 🔥 FLEXY-004 LED
     {
-      "title": "Outdoor Front Lamp",
+      "title": "Room 4 Lamp",
       "device_id": "flexy-004",
       "target": "LED",
       "statusKey": "led",
-      "room": "outdoor",
+      "room": "04",
       "icon": Icons.lightbulb,
       "color": Color(0xffF59E0B),
     },
 
     /// 🔥 FLEXY-004 FAN
     {
-      "title": "Outdoor Cooling Fan",
+      "title": "Room 4 Fan",
       "device_id": "flexy-004",
       "target": "FAN",
       "statusKey": "fan",
-      "room": "outdoor",
+      "room": "04",
       "icon": Icons.mode_fan_off_outlined,
       "color": Color(0xff3B82F6),
     },
 
     /// 🔥 FLEXY-005
     {
-      "title": "Outdoor Backyard Lamp",
+      "title": "Outdoor Front Lamp",
       "device_id": "flexy-005",
       "target": "LED",
       "statusKey": "led",
-      "room": "outdoor",
+      "room": "05",
       "icon": Icons.lightbulb,
       "color": Color(0xff22C55E),
     },

@@ -21,8 +21,8 @@ class ActiveDevicesCard extends StatelessWidget {
       {
         "target": "LED",
         "statusKey": "led",
-        "title": "Lamp",
-        "room": "Living Room",
+        "title": "Room 1 Lamp",
+        "room": "01",
         "icon": Icons.light_outlined,
         "iconBg": Color(0xffEEF9F0),
         "iconColor": Color(0xff22C55E),
@@ -33,8 +33,8 @@ class ActiveDevicesCard extends StatelessWidget {
       {
         "target": "LED",
         "statusKey": "led",
-        "title": "Lamp",
-        "room": "Bedroom",
+        "title": "Room 2 Lamp",
+        "room": "02",
         "icon": Icons.light_outlined,
         "iconBg": Color(0xffEEF4FF),
         "iconColor": Color(0xff3B82F6),
@@ -45,8 +45,8 @@ class ActiveDevicesCard extends StatelessWidget {
       {
         "target": "LED",
         "statusKey": "led",
-        "title": "Lamp",
-        "room": "Kitchen",
+        "title": "Room 3 Lamp",
+        "room": "03",
         "icon": Icons.light_outlined,
         "iconBg": Color(0xffEEF4FF),
         "iconColor": Color(0xff3B82F6),
@@ -58,8 +58,8 @@ class ActiveDevicesCard extends StatelessWidget {
       {
         "target": "LED",
         "statusKey": "led",
-        "title": "Lamp",
-        "room": "Outdoor Front",
+        "title": "Room 4 Lamp",
+        "room": "04",
         "icon": Icons.light_outlined,
         "iconBg": Color(0xffFEF3C7),
         "iconColor": Color(0xffF59E0B),
@@ -68,7 +68,7 @@ class ActiveDevicesCard extends StatelessWidget {
       {
         "target": "FAN",
         "statusKey": "fan",
-        "title": "Cooling Fan",
+        "title": "Room 4 Fan",
         "room": "Outdoor Front",
         "icon": Icons.mode_fan_off_outlined,
         "iconBg": Color(0xffDBEAFE),
